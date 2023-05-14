@@ -175,3 +175,10 @@ cython_debug/
 # Data
 *.zip
 data/
+processed_data/
+
+# Models
+models/
+
+# Solution
+*.csv
