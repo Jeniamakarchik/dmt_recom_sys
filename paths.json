@@ -1,0 +1,7 @@
+{
+  "train": "data/training_set_VU_DM.csv",
+  "test": "data/test_set_VU_DM.csv",
+  "submission": "submission.csv",
+  "models_folder": "models/",
+  "processed_data": "processed_data/"
+}
