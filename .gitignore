@@ -1,3 +1,8 @@
+# Custom
+playground.ipynb
+data/
+venv/
+
 # General
 .DS_Store
 .AppleDouble
