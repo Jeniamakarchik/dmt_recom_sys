@@ -87,6 +87,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*/.ipynb_checkpoints/*
 
 # IPython
 profile_default/
@@ -179,3 +180,10 @@ cython_debug/
 # Data
 *.zip
 data/
+processed_data/
+
+# Models
+models/
+
+# Solution
+*.csv
