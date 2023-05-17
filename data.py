@@ -29,7 +29,7 @@ def read_data(path):
 
 
 def read_processed_data(path):
-    return pd.read_csv(path, compression='gzip', index_col=['srch_id', 'prop_id'])
+    return pd.read_csv(path, compression='gzip')
 
 
 def read_train():
@@ -58,7 +58,7 @@ def read_processed_test():
 
 
 def save_compressed_data(data, path):
-    data.to_csv(path, chunksize=100000, compression='gzip')
+    data.to_csv(path, chunksize=100000, compression='gzip', index=False)
 
 
 def save_processed_train(data):

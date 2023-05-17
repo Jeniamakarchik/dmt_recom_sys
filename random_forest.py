@@ -6,6 +6,7 @@ from data import read_processed_train, save_model
 def train_model():
     print('Reading training data')
     data = read_processed_train()
+    data = data.set_index(['srch_id', 'prop_id'], drop=True)
     print(data.shape)
 
     feature_names = list(data.columns)
