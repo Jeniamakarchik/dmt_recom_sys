@@ -14,6 +14,8 @@ def predict(is_test=True):
     else:
         data = read_processed_val()
 
+    data = data.set_index(['srch_id', 'prop_id'], drop=True)
+
     feature_names = list(data.columns)
     for col in ['date_time', 'target']:
         if col in feature_names:

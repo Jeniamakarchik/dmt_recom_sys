@@ -1,5 +1,5 @@
 {
-  "model_name": "random_forest",
+  "model_name": "random_forest.pkl",
   "model_params": {},
   "na_threshold": 0.8,
   "click_weight": 0.2
