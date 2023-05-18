@@ -1,4 +1,4 @@
-import csv
+from datetime import datetime
 import json
 from operator import itemgetter
 from pathlib import Path
@@ -77,25 +77,37 @@ def save_processed_test(data):
 
 
 def save_model(model):
-    out_path = get_paths()['models_folder'] / Path(get_settings()['model_name'])
+    out_path = get_paths()['models_folder'] / Path(f'{get_settings()["model_name"]}.pkl')
     with open(out_path, 'wb') as f:
         pickle.dump(model, f)
 
 
 def load_model():
-    in_path = get_paths()['models_folder'] / Path(get_settings()['model_name'])
+    in_path = get_paths()['models_folder'] / Path(f'{get_settings()["model_name"]}.pkl')
     with open(in_path, 'rb') as f:
         model = pickle.load(f)
     return model
 
 
-def write_solution(solution):
-    solution.to_csv('solution.csv')
+def write_solution(solution, folder_path):
+    """
+    Function to save solution with scores.
+
+    :param solution: solution for the search with 'srch_id', 'prop_id' and 'ranks'
+    :return:
+    """
+    folder_path.mkdir(parents=True, exist_ok=True)
+    solution.to_csv(folder_path / Path('solution.csv'))
 
 
-def write_submission(solution):
-    submission_path = get_paths()['submission']
+def write_submission(solution, folder_path):
+    """
+    Function to create and save the submission.
+
+    :param solution: solution for the search with 'srch_id', 'prop_id'
+    :return:
+    """
+    folder_path.mkdir(parents=True, exist_ok=True)
     sorted_solution = solution.reset_index().sort_values(by=['srch_id', 'ranks'], ascending=[True, False])
     sorted_solution = sorted_solution.drop(['ranks'], axis=1)
-
-    sorted_solution.to_csv(submission_path, index=False)
+    sorted_solution.to_csv(folder_path / Path('submission.csv'), index=False)
