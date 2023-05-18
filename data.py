@@ -90,10 +90,12 @@ def load_model():
 
 
 def write_solution(solution):
+    """ with rank """
     solution.to_csv('solution.csv')
 
 
 def write_submission(solution):
+    """ without ranks, sorted """
     submission_path = get_paths()['submission']
     sorted_solution = solution.reset_index().sort_values(by=['srch_id', 'ranks'], ascending=[True, False])
     sorted_solution = sorted_solution.drop(['ranks'], axis=1)
