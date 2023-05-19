@@ -1,7 +1,6 @@
 from sklearn.ensemble import RandomForestRegressor
-
 from data import read_processed_train, save_model
-from knn import knn_ranking
+
 
 
 def train_model():
@@ -18,8 +17,7 @@ def train_model():
     target = data.target.values
 
     print("Training the model")
-    #model = RandomForestRegressor(n_estimators=30, verbose=2, n_jobs=2, min_samples_split=10, random_state=42)
-    model = knn_ranking(data)
+    model = RandomForestRegressor(n_estimators=30, verbose=2, n_jobs=2, min_samples_split=10, random_state=42)
     model.fit(features, target)
 
     print("Saving the model")

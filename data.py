@@ -31,6 +31,17 @@ def read_data(path):
 def read_processed_data(path):
     return pd.read_csv(path, compression='gzip', index_col=['srch_id', 'prop_id'])
 
+def read_processed_knn_train():
+    path = get_paths()['processed_data'] / Path('train.csv.gz')
+    return pd.read_csv(path, compression='gzip')
+
+def read_processed_knn_val():
+    path = get_paths()['processed_data'] / Path('val.csv.gz')
+    return pd.read_csv(path, compression='gzip')
+
+def read_processed_knn_test():
+    path = get_paths()['processed_data'] / Path('test.csv.gz')
+    return pd.read_csv(path, compression='gzip')
 
 def read_train():
     path = get_paths()['train']
