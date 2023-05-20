@@ -3,7 +3,6 @@ from collections import Counter
 from sklearn.neighbors import KNeighborsRegressor
 import pandas as pd
 from data import read_processed_knn_train, read_processed_knn_val, read_processed_knn_test, save_model
-from data_preprocessing import create_target
 import numpy as np
 import argparse
 
@@ -20,7 +19,7 @@ def train_knn(debug=False):
     if debug == True:
         print('Debug mode')
         train_data = train_data.sample(n=10)
-        test_data = test_data.sample(n=10)
+        test_data = test_data.sample(n=100)
         val_data = val_data.sample(n=10)
     
     # Divide the data into features and target
@@ -50,25 +49,19 @@ def train_knn(debug=False):
     df_pred['predicted_target'] = val_pred
     df_pred['target'] = val_data.loc[val_features.index, 'target']
 
-    #print(df_pred[['srch_id', 'prop_id', 'predicted_target', 'target']].head())
-
     # Add the predicted target to the test set
     df_test = test_features.copy()
     df_test['srch_id'] = test_data.loc[test_features.index, 'srch_id']
     df_test['prop_id'] = test_data.loc[test_features.index, 'prop_id']
     df_test['predicted_target'] = test_pred
 
-    #print(df_test[['srch_id', 'prop_id', 'predicted_target']].head())
     # Rank the items within each srch_id group 
     df_pred['rank'] = df_pred.groupby('srch_id')['predicted_target'].rank(ascending=False)
     df_test['rank'] = df_test.groupby('srch_id')['predicted_target'].rank(ascending=False)
 
     # Sort the items by srch_id and rank
     df_pred = df_pred.sort_values(['srch_id', 'rank'], ascending=[True, False])
-    df_test = df_pred.sort_values(['srch_id', 'rank'], ascending=[True, False])
-
-    # print(df_pred[['srch_id', 'prop_id', 'predicted_target', 'target']].head())
-    # print(df_test[['srch_id', 'prop_id', 'predicted_target']].head())
+    df_test = df_test.sort_values(['srch_id', 'rank'], ascending=[True, False])
 
     val_ndcg = calculate_ndcg(df_pred, 5)
     print(f'The validation NDCG@5 = {val_ndcg}')
