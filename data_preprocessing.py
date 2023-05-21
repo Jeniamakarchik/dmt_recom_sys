@@ -26,8 +26,13 @@ def create_target(data):
     :param data: dataframe
     :return: composed target values
     """
-    # TODO: add price and position weights
-    return data['booking_bool'] + data['click_bool'] * get_settings()['click_weight']
+
+    data['target'] = data['booking_bool'] * 5
+
+    mask = data['click_bool'] == 1
+    data.loc[mask, 'target'] = data.loc[mask, 'click_bool'] * get_settings()['click_weight']/np.log(data['position'] + 1)
+
+    return data
 
 
 def split_search_ids(search_ids, train_frac=0.7, val_frac=0.2):
@@ -64,7 +69,6 @@ def create_train_val_test_sets():
     """
     Function to create train val split of initial train data. Splitted data is saved to three separate compressed files.
     """
-    # TODO: add logging
     data = read_train()
     test_data = read_test()
 
@@ -72,25 +76,20 @@ def create_train_val_test_sets():
     _, cols_to_drop = calculate_proportion_of_left_data(data, threshold=get_settings()['na_threshold'])
     data = data.drop(cols_to_drop, axis=1)
     test_data = test_data.drop(set(cols_to_drop).intersection(set(test_data.columns)), axis=1)
+    print(f'Columns were deleted: {cols_to_drop}')
 
     # filling na with median value for every numeric column, others - 0
-    print(data.columns[data.isnull().any()])
+    print(f'Columns with NAs: {data.columns[data.isnull().any()]}')
     data = data.fillna(data.median(numeric_only=True))
     test_data = test_data.fillna(data.median(numeric_only=True))
 
-    # TODO: add feature extraction here - weekday, etc.
-
     # creating target variable
-    data['target'] = create_target(data)  # on this step 'gross_bookings_usd' is not in axis
-    data = data.drop(['position', 'click_bool', 'booking_bool'], axis=1)
+    data = create_target(data)  # on this step 'gross_bookings_usd' is not in axis
+    data = data.drop(['position', 'click_bool', 'booking_bool'], axis=1)  # remove cols which are not in test set
 
-    # splitting
+    # splitting into train/val/test
     srch_id_div = split_search_ids(data.srch_id.unique(), train_frac=0.8, val_frac=0.2)
     data['split'] = data['srch_id'].map(srch_id_div)
-
-    # reindexing
-    data = data.set_index(['srch_id', 'prop_id'], drop=True)
-    test_data = test_data.set_index(['srch_id', 'prop_id'], drop=True)
 
     assert (set(data.columns) - set(test_data.columns)) == {'target', 'split'}
 
