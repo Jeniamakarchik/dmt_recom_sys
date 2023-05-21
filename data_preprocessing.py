@@ -19,18 +19,24 @@ def calculate_proportion_of_left_data(data, threshold=0.8):
     return (~upd_data.isna()).sum().sum() / (~data.isna()).sum().sum(), cols_to_drop
 
 
-def create_target(data):
+def create_target(data, check_randomness=False):
     """
     Function to create rank for every property.
 
+    :param check_randomness: parameter that show do we need to apply position bias with respect to randomness
     :param data: dataframe
     :return: composed target values
     """
 
-    data['target'] = data['booking_bool'] * 5
+    data['target'] = 0
+    data.loc[data['click_bool'] == 1, 'target'] = 1
+    data.loc[data['booking_bool'] == 1, 'target'] = 5
 
-    mask = data['click_bool'] == 1
-    data.loc[mask, 'target'] = data.loc[mask, 'click_bool'] * get_settings()['click_weight']/np.log(data['position'] + 1)
+    if check_randomness:
+        mask = data.random_bool == 0
+        data.loc[mask, 'target'] = data[mask, 'target'] * get_settings()['click_weight'] / np.log(data['position'] + 1)
+    else:
+        data['target'] = data['target'] * get_settings()['click_weight']/np.log(data['position'] + 1)
 
     return data
 
@@ -83,15 +89,15 @@ def create_train_val_test_sets():
     data = data.fillna(data.median(numeric_only=True))
     test_data = test_data.fillna(data.median(numeric_only=True))
 
-    # creating target variable
+    # creating simple target variable
     data = create_target(data)  # on this step 'gross_bookings_usd' is not in axis
-    data = data.drop(['position', 'click_bool', 'booking_bool'], axis=1)  # remove cols which are not in test set
+    # data = data.drop(['position', 'click_bool', 'booking_bool'], axis=1)  # remove cols which are not in test set
 
     # splitting into train/val/test
     srch_id_div = split_search_ids(data.srch_id.unique(), train_frac=0.8, val_frac=0.2)
     data['split'] = data['srch_id'].map(srch_id_div)
 
-    assert (set(data.columns) - set(test_data.columns)) == {'target', 'split'}
+    assert (set(data.columns) - set(test_data.columns)) == {'target', 'split', 'position', 'click_bool', 'booking_bool'}
 
     # save datasets
     print(f'Saving trainset - {data[data.split == "train"].shape}.')

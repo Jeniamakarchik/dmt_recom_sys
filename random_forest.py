@@ -11,6 +11,9 @@ def train_model():
 
     feature_names = list(data.columns)
     feature_names.remove('date_time')
+    feature_names.remove('position')
+    feature_names.remove('click_bool')
+    feature_names.remove('booking_bool')
     feature_names.remove('target')
 
     print(f'Features: {feature_names}')
@@ -18,7 +21,7 @@ def train_model():
     target = data.target.values
 
     print("Training the model")
-    model = RandomForestRegressor(n_estimators=30, verbose=2, n_jobs=2, min_samples_split=10, random_state=42)
+    model = RandomForestRegressor(n_estimators=70, verbose=2, n_jobs=2, min_samples_split=10, random_state=42)
     model.fit(features, target)
 
     print("Saving the model")
