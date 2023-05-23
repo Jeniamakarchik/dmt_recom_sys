@@ -1,6 +1,6 @@
 from sklearn.ensemble import RandomForestRegressor
-
 from data import read_processed_train, save_model
+
 
 
 def train_model():
@@ -29,4 +29,5 @@ def train_model():
 
 
 if __name__ == '__main__':
+    
     train_model()
