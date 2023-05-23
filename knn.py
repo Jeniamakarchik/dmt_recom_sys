@@ -92,13 +92,6 @@ def calculate_ndcg(df, k=5):
 
     return sum(ndcg_scores) / len(ndcg_scores)  
 
-# def calculate_ndcg(df):
-#     df = df.sort_values(['srch_id', 'target'], ascending=[True, False])
-#     df['rank'] = df.groupby('srch_id').cumcount() + 1
-#     df['gain'] = (2 ** df['label'] - 1) / np.log2(1 + df['rank'])
-#     ndcg = df.groupby('srch_id')['gain'].sum() / df.groupby('srch_id')['gain'].transform('first')
-#     return ndcg.mean()
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true', help='Run in debug mode')
