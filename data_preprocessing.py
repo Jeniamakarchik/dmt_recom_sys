@@ -8,7 +8,24 @@ from data import read_train, read_test, get_settings, save_processed_train, save
 # Parse command line arguments
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-v2", "--val2" , action="store_true")
+
+parser.add_argument(
+    "-v2",
+    "--version2",
+    action="store_true",
+    help="Create 2 validation sets instead of 1"
+    )
+
+parser.add_argument(
+    '-s',
+    '--splits',
+    default=[0.7, 0.2, 0.1],
+    nargs=3,
+    metavar=('train', 'val1', 'val2'),
+    type=float,
+    help='specify the train, val1 and val2 splits'
+)
+
 args = parser.parse_args()
 
 # --------------------------------------------------------------------------- #
@@ -122,6 +139,12 @@ def create_balanced_train_val_test_sets(train_frac=0.7, val1_frac=0.2):
     data = read_train()
     test_data = read_test()
 
+    # removing columns with na amount > threshold
+    _, cols_to_drop = calculate_proportion_of_left_data(data, threshold=get_settings()['na_threshold'])
+    data = data.drop(cols_to_drop, axis=1)
+    test_data = test_data.drop(set(cols_to_drop).intersection(set(test_data.columns)), axis=1)
+    print(f'Columns were deleted: {cols_to_drop}')
+
     # filling na with median value for every numeric column, others - 0
     print(f'Columns with NAs: {data.columns[data.isnull().any()]}')
     data = data.fillna(data.median(numeric_only=True))
@@ -163,7 +186,11 @@ def create_balanced_train_val_test_sets(train_frac=0.7, val1_frac=0.2):
 
 
 if __name__ == '__main__':
-    if args.val2:
-        create_balanced_train_val_test_sets()
+    if args.version2:
+        if sum(x*10 for x in args.splits) != 10:
+            raise ValueError('Sum of the splits must be equal to 1')
+        else:
+            print(f'Creating train/val1/val2 sets with splits {args.splits}')
+            create_balanced_train_val_test_sets(train_frac=args.splits[0], val1_frac=args.splits[1])
     else:
         create_train_val_test_sets()
