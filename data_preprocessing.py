@@ -34,9 +34,10 @@ def create_target(data, check_randomness=False):
 
     if check_randomness:
         mask = data.random_bool == 0
-        data.loc[mask, 'target'] = data[mask, 'target'] * get_settings()['click_weight'] / np.log(data['position'] + 1)
+        data.loc[mask, 'target'] = data[mask, 'target'] * get_settings()['click_weight'] \
+                                    / np.log(data[mask, 'position'] + 1)
     else:
-        data['target'] = data['target'] * get_settings()['click_weight']/np.log(data['position'] + 1)
+        data['target'] = data['target'] * get_settings()['click_weight'] / np.log(data['position'] + 1)
 
     return data
 
@@ -94,7 +95,7 @@ def create_train_val_test_sets():
     # data = data.drop(['position', 'click_bool', 'booking_bool'], axis=1)  # remove cols which are not in test set
 
     # splitting into train/val/test
-    srch_id_div = split_search_ids(data.srch_id.unique(), train_frac=0.8, val_frac=0.2)
+    srch_id_div = split_search_ids(data.srch_id.unique(), train_frac=0.7, val_frac=0.2)
     data['split'] = data['srch_id'].map(srch_id_div)
 
     assert (set(data.columns) - set(test_data.columns)) == {'target', 'split', 'position', 'click_bool', 'booking_bool'}
@@ -104,6 +105,8 @@ def create_train_val_test_sets():
     save_processed_train(data[data.split == 'train'].drop(['split'], axis=1))
     print(f'Saving valset - {data[data.split == "val"].shape}.')
     save_processed_val(data[data.split == 'val'].drop(['split'], axis=1))
+    print(f'Saving testset from train data - {data[data.split == "val"].shape}.')
+    save_processed_test(data[data.split == 'test'].drop(['split'], axis=1))
     print(f'Saving testset - {test_data.shape}.')
     save_processed_test(test_data)
 
