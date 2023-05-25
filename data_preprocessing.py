@@ -1,7 +1,17 @@
 import numpy as np
+import random
+import argparse
 
 from data import read_train, read_test, get_settings, save_processed_train, save_processed_val, save_processed_test
 
+# --------------------------------------------------------------------------- #
+# Parse command line arguments
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-v2", "--val2" , action="store_true")
+args = parser.parse_args()
+
+# --------------------------------------------------------------------------- #
 
 def calculate_proportion_of_left_data(data, threshold=0.8):
     """
@@ -107,6 +117,53 @@ def create_train_val_test_sets():
     print(f'Saving testset - {test_data.shape}.')
     save_processed_test(test_data)
 
+def create_balanced_train_val_test_sets(train_frac=0.7, val1_frac=0.2):
+    # Read raw data
+    data = read_train()
+    test_data = read_test()
+
+    # filling na with median value for every numeric column, others - 0
+    print(f'Columns with NAs: {data.columns[data.isnull().any()]}')
+    data = data.fillna(data.median(numeric_only=True))
+    test_data = test_data.fillna(data.median(numeric_only=True))
+
+    # creating simple target variable
+    data = create_target(data)
+
+    # Splitting into train/val/test
+    srch_ids = data['srch_id'].unique()
+    random.shuffle(srch_ids)
+
+    # Train
+    train_end = int(train_frac * len(srch_ids))
+    train_ids = srch_ids[:train_end]
+    train_df = data[data['srch_id'].isin(train_ids)]
+    train_df = train_df.sort_values(by=['srch_id'])
+
+    # Validation 1
+    val1_end = int((train_frac + val1_frac) * len(srch_ids))
+    val1_ids = srch_ids[train_end:val1_end]
+    val1_df = data[data['srch_id'].isin(val1_ids)]
+    val1_df = val1_df.sort_values(by=['srch_id'])
+
+    # Validation 2
+    val2_ids = srch_ids[val1_end:]
+    val2_df = data[data['srch_id'].isin(val2_ids)]
+    val2_df = val2_df.sort_values(by=['srch_id'])
+
+    # Save datasets
+    print(f'Saving trainset - {train_df.shape}.')
+    save_processed_train(train_df)
+    print(f'Saving valset 1 - {val1_df.shape}.')
+    save_processed_val(val1_df, num=1)
+    print(f'Saving valset 2 - {val2_df.shape}.')
+    save_processed_val(val2_df, num=2)
+    print(f'Saving testset - {test_data.shape}.')
+    save_processed_test(test_data)
+
 
 if __name__ == '__main__':
-    create_train_val_test_sets()
+    if args.val2:
+        create_balanced_train_val_test_sets()
+    else:
+        create_train_val_test_sets()
