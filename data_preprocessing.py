@@ -26,9 +26,39 @@ parser.add_argument(
     help='specify the train, val1 and val2 splits'
 )
 
+def fraction(string):
+    """
+    Function to check if the string is between 0 and 1.
+
+    :param string: string to check
+    :return: float value of the string (if it is valid)
+    """
+    # Is it a float?
+    try:
+        float(string)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{string} is not a floating point value or integer")
+    
+    frac = float(string)
+    
+    # Is it between 0 and 1?
+    if frac < 0 or frac > 1:
+        raise argparse.ArgumentTypeError(f"{string} is not between 0 and 1")
+    
+    return frac
+
+parser.add_argument(
+    '-d',
+    '--downsample',
+    default=0.0,
+    type=fraction,
+    help='specify the fraction of zero clicks to remove'
+)
+
 args = parser.parse_args()
 
 # --------------------------------------------------------------------------- #
+
 
 def calculate_proportion_of_left_data(data, threshold=0.8):
     """
@@ -97,8 +127,23 @@ def split_search_ids(search_ids, train_frac=0.7, val_frac=0.2):
 
     return search_ids_split
 
+def downsample_zero_clicks(data, downsample_frac):
+    """
+    Function to downsample zero clicks in the dataset.
 
-def create_train_val_test_sets():
+    :param data: dataset to downsample
+    :param frac: fraction of zero clicks to remove
+    """
+    if downsample_frac == 0:
+        return
+    
+    drop_indices = data[data['click_bool'] == 0].sample(frac=downsample_frac).index
+    data = data.drop(drop_indices)
+
+    return data
+
+
+def create_train_val_test_sets(downsample_frac=0):
     """
     Function to create train val split of initial train data. Splitted data is saved to three separate compressed files.
     """
@@ -126,15 +171,22 @@ def create_train_val_test_sets():
 
     assert (set(data.columns) - set(test_data.columns)) == {'target', 'split', 'position', 'click_bool', 'booking_bool'}
 
+    # downsample zero clicks in train data
+    train_df = data[data.split == 'train'].drop(['split'], axis=1)
+    print(f'Before downsampling: {train_df.shape}')
+    print(f'Downsampling {downsample_frac * 100}% of zero clicks in training data.')
+    train_df = downsample_zero_clicks(train_df, downsample_frac)
+    print(f'After downsampling: {train_df.shape}')
+
     # save datasets
-    print(f'Saving trainset - {data[data.split == "train"].shape}.')
-    save_processed_train(data[data.split == 'train'].drop(['split'], axis=1))
+    print(f'Saving trainset - {train_df.shape}.')
+    save_processed_train(train_df)
     print(f'Saving valset - {data[data.split == "val"].shape}.')
     save_processed_val(data[data.split == 'val'].drop(['split'], axis=1))
     print(f'Saving testset - {test_data.shape}.')
     save_processed_test(test_data)
 
-def create_balanced_train_val_test_sets(train_frac=0.7, val1_frac=0.2):
+def create_train_val_test_sets_v2(train_frac=0.7, val1_frac=0.2, downsample_frac=0):
     # Read raw data
     data = read_train()
     test_data = read_test()
@@ -162,6 +214,10 @@ def create_balanced_train_val_test_sets(train_frac=0.7, val1_frac=0.2):
     train_ids = srch_ids[:train_end]
     train_df = data[data['srch_id'].isin(train_ids)]
     train_df = train_df.sort_values(by=['srch_id'])
+
+    # downsample zero clicks in train data
+    print(f'Downsampling {downsample_frac * 100}% of zero clicks in training data.')
+    train_df = downsample_zero_clicks(train_df, downsample_frac)
 
     # Validation 1
     val1_end = int((train_frac + val1_frac) * len(srch_ids))
@@ -191,6 +247,6 @@ if __name__ == '__main__':
             raise ValueError('Sum of the splits must be equal to 1')
         else:
             print(f'Creating train/val1/val2 sets with splits {args.splits}')
-            create_balanced_train_val_test_sets(train_frac=args.splits[0], val1_frac=args.splits[1])
+            create_train_val_test_sets_v2(train_frac=args.splits[0], val1_frac=args.splits[1], downsample_frac=args.downsample)
     else:
-        create_train_val_test_sets()
+        create_train_val_test_sets(downsample_frac=args.downsample)
