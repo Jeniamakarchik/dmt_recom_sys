@@ -58,8 +58,11 @@ def read_processed_train():
     return read_processed_data(path)
 
 
-def read_processed_val():
-    path = get_paths()['processed_data'] / Path('val.csv.gz')
+def read_processed_val(num=None):
+    if num:
+        path = get_paths()['processed_data'] / Path(f'val_{num}.csv.gz')
+    else:
+        path = get_paths()['processed_data'] / Path('val.csv.gz')
     return read_processed_data(path)
 
 
@@ -77,8 +80,11 @@ def save_processed_train(data):
     save_compressed_data(data, path)
 
 
-def save_processed_val(data):
-    path = get_paths()['processed_data'] / Path('val.csv.gz')
+def save_processed_val(data, num=None):
+    if num:
+        path = get_paths()['processed_data'] / Path(f'val_{num}.csv.gz')
+    else:
+        path = get_paths()['processed_data'] / Path('val.csv.gz')
     save_compressed_data(data, path)
 
 
