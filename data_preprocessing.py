@@ -135,7 +135,7 @@ def downsample_zero_clicks(data, downsample_frac):
     :param frac: fraction of zero clicks to remove
     """
     if downsample_frac == 0:
-        return
+        return data
     
     drop_indices = data[data['click_bool'] == 0].sample(frac=downsample_frac).index
     data = data.drop(drop_indices)
