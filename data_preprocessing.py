@@ -216,8 +216,10 @@ def create_train_val_test_sets_v2(train_frac=0.7, val1_frac=0.2, downsample_frac
     train_df = train_df.sort_values(by=['srch_id'])
 
     # downsample zero clicks in train data
+    print(f'Before downsampling: {train_df.shape}')
     print(f'Downsampling {downsample_frac * 100}% of zero clicks in training data.')
     train_df = downsample_zero_clicks(train_df, downsample_frac)
+    print(f'After downsampling: {train_df.shape}')
 
     # Validation 1
     val1_end = int((train_frac + val1_frac) * len(srch_ids))
